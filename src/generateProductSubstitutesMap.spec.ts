@@ -1,4 +1,4 @@
-import { addWeeks } from 'date-fns';
+import { addWeeks, subDays } from 'date-fns';
 import { Product, generateProductSubstitutesMap } from './generateProductSubstitutesMap';
 
 const dbProducts: ReadonlyArray<Product> = [
@@ -13,7 +13,7 @@ const dbProducts: ReadonlyArray<Product> = [
     replacementDate: addWeeks(new Date(), 5),
   },
   { id: '3' },
-  { id: '4', replacementProductId: '1' },
+  { id: '4', replacementProductId: '1', replacementDate: new Date('2021-01-01') },
   {
     id: '5',
     replacementProductId: '6',
@@ -28,16 +28,28 @@ const dbProducts: ReadonlyArray<Product> = [
   { id: '8' },
   { id: '9' },
 
+  {
+    id: '90',
+    replacementProductId: '7',
+    replacementDate: subDays(new Date(), 1),
+  },
+
   // Posible client error with self-referencing products
-  { id: '10', replacementProductId: '10' },
+  // { id: '10', replacementProductId: '10' },
 
   // Posible client error with circular references
-  { id: '11', replacementProductId: '12' },
-  { id: '12', replacementProductId: '11' },
+  // { id: '11', replacementProductId: '12', replacementDate: subWeeks(new Date(), 2) },
+  // { id: '12', replacementProductId: '11', replacementDate: subWeeks(new Date(), 2) },
 
-  { id: '13', replacementProductId: '14' },
-  { id: '14', replacementProductId: '15' },
-  { id: '15', replacementProductId: '13' },
+  // { id: '13', replacementProductId: '14', replacementDate: subWeeks(new Date(), 2) },
+  // { id: '14', replacementProductId: '15', replacementDate: subWeeks(new Date(), 2) },
+  // { id: '15', replacementProductId: '13', replacementDate: subWeeks(new Date(), 2) },
+
+  // Posible client error without replacementDate and having a replacementProductId
+  // { id: '15', replacementProductId: '13' },
+
+  // Posible client error without replacementProductId and having a replacementDate
+  // { id: '16', replacementDate: subWeeks(new Date(), 2) },
 ];
 
 describe('TODO: add describe text', () => {
@@ -49,6 +61,10 @@ describe('TODO: add describe text', () => {
   it('map should not have product 9 in entries', () => {
     const hasNine = map.has('9');
     expect(hasNine).toBe(false);
+  });
+
+  it('map should have product 8 as replacement for product 90', () => {
+    expect(map.get('90')).toBe('8');
   });
 
   it('map should return undefined of a product without replacementProductId', () => {
