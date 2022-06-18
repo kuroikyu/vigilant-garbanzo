@@ -62,77 +62,52 @@ function getSubstituteProductRecursive({
     return -1;
   }
 
-  if (typeof currentPosition === 'undefined') {
-    const currentProduct = products[initialPosition];
+  const currentProduct = products[currentPosition ?? initialPosition];
+  const trueOrUndefined = typeof currentPosition === 'undefined' ? undefined : true;
 
-    // ERROR: No replacementId but replacement date is set
-    if (!currentProduct.replacementProductId && currentProduct.replacementDate) {
-      return -1;
-    }
-
-    // RESULT: No substitute found
-    if (!currentProduct.replacementProductId) {
-      return undefined;
-    }
-
-    // ERROR: Replacement but no replacement date
-    if (!currentProduct.replacementDate) {
-      return -1;
-    }
-
-    if (dateFns.isAfter(currentProduct.replacementDate, now)) {
-      return undefined;
-    }
-
-    const replacementProduct = products.find(
-      (repl) => repl.id === currentProduct.replacementProductId
-    );
-
-    // ERROR: replacementProductId not valid
-    if (!replacementProduct) {
-      return -1;
-    }
-
-    return getSubstituteProductRecursive({
-      products,
-      initialPosition,
-      currentPosition: products.indexOf(replacementProduct),
-      now,
-    });
-  } else {
-    const currentProduct = products[currentPosition];
-
-    // RESULT: Substitute found!
-    if (!currentProduct.replacementProductId) {
-      return currentProduct.id;
-    }
-
-    // ERROR: Replacement but no replacement date
-    if (!currentProduct.replacementDate) {
-      return -1;
-    }
-
-    // RESULT: Substitute found despite replacement date
-    if (dateFns.isAfter(currentProduct.replacementDate, now)) {
-      return currentProduct.id;
-    }
-
-    const replacementProduct = products.find(
-      (repl) => repl.id === currentProduct.replacementProductId
-    );
-
-    // ERROR: replacementProductId not valid
-    if (!replacementProduct) {
-      return -1;
-    }
-
-    return getSubstituteProductRecursive({
-      products,
-      initialPosition,
-      currentPosition: products.indexOf(replacementProduct),
-      now,
-    });
+  // ERROR: No replacementId but replacement date is set in the past
+  if (
+    !currentProduct.replacementProductId &&
+    currentProduct.replacementDate &&
+    dateFns.isBefore(currentProduct.replacementDate, now)
+  ) {
+    return -1;
   }
+
+  // currentPosition ?
+  // undefined  - RESULT: No substitute found
+  // value      - RESULT: Substitute found
+  if (!currentProduct.replacementProductId) {
+    return trueOrUndefined && currentProduct.id;
+  }
+
+  // ERROR: Replacement but no replacement date
+  if (!currentProduct.replacementDate) {
+    return -1;
+  }
+
+  // currentPosition ?
+  // undefined  - RESULT: No need to be replaced yet
+  // value      - RESULT: Substitute found that hasn't expired yet
+  if (dateFns.isAfter(currentProduct.replacementDate, now)) {
+    return trueOrUndefined && currentProduct.id;
+  }
+
+  const replacementProduct = products.find(
+    (repl) => repl.id === currentProduct.replacementProductId
+  );
+
+  // ERROR: replacementProductId not valid
+  if (!replacementProduct) {
+    return -1;
+  }
+
+  return getSubstituteProductRecursive({
+    products,
+    initialPosition,
+    currentPosition: products.indexOf(replacementProduct),
+    now,
+  });
 }
 
 /**
@@ -147,40 +122,3 @@ function generateProductsByIdIndex(products: ReadonlyArray<Product>): Map<Produc
 }
 
 export default generateProductSubstitutesMap;
-
-// const dbProducts: ReadonlyArray<Product> = [
-//   {
-//     id: '1',
-//     replacementProductId: '2',
-//     replacementDate: new Date('2021-01-01'),
-//   },
-//   {
-//     id: '2',
-//     replacementProductId: '3',
-//     replacementDate: dateFns.addWeeks(new Date(), 5),
-//   },
-//   { id: '3' },
-//   { id: '4', replacementProductId: '1', replacementDate: new Date('2021-01-01') },
-//   {
-//     id: '5',
-//     replacementProductId: '6',
-//     replacementDate: new Date('2021-01-01'),
-//   },
-//   { id: '6' },
-
-//   {
-//     id: '7',
-//     replacementProductId: '8',
-//     replacementDate: new Date('2021-01-01'),
-//   },
-//   { id: '8' },
-//   { id: '9' },
-
-//   {
-//     id: '90',
-//     replacementProductId: '7',
-//     replacementDate: dateFns.subDays(new Date(), 1),
-//   },
-// ];
-
-// console.log(generateProductSubstitutesMap(dbProducts));
