@@ -57,8 +57,18 @@ function getSubstituteProductRecursive({
   currentPosition,
   now = new Date(),
 }: GetSubstituteProductRecursive): string | undefined | -1 {
+  // ERROR: Circular reference
+  if (initialPosition === currentPosition) {
+    return -1;
+  }
+
   if (typeof currentPosition === 'undefined') {
     const currentProduct = products[initialPosition];
+
+    // ERROR: No replacementId but replacement date is set
+    if (!currentProduct.replacementProductId && currentProduct.replacementDate) {
+      return -1;
+    }
 
     // RESULT: No substitute found
     if (!currentProduct.replacementProductId) {
@@ -137,3 +147,40 @@ function generateProductsByIdIndex(products: ReadonlyArray<Product>): Map<Produc
 }
 
 export default generateProductSubstitutesMap;
+
+// const dbProducts: ReadonlyArray<Product> = [
+//   {
+//     id: '1',
+//     replacementProductId: '2',
+//     replacementDate: new Date('2021-01-01'),
+//   },
+//   {
+//     id: '2',
+//     replacementProductId: '3',
+//     replacementDate: dateFns.addWeeks(new Date(), 5),
+//   },
+//   { id: '3' },
+//   { id: '4', replacementProductId: '1', replacementDate: new Date('2021-01-01') },
+//   {
+//     id: '5',
+//     replacementProductId: '6',
+//     replacementDate: new Date('2021-01-01'),
+//   },
+//   { id: '6' },
+
+//   {
+//     id: '7',
+//     replacementProductId: '8',
+//     replacementDate: new Date('2021-01-01'),
+//   },
+//   { id: '8' },
+//   { id: '9' },
+
+//   {
+//     id: '90',
+//     replacementProductId: '7',
+//     replacementDate: dateFns.subDays(new Date(), 1),
+//   },
+// ];
+
+// console.log(generateProductSubstitutesMap(dbProducts));
