@@ -32,6 +32,7 @@ export function generateProductSubstitutesMap(
       initialPosition: products.indexOf(product),
       currentPosition: undefined,
       now,
+      productsIndexed,
     });
 
     if (result === -1) {
@@ -49,6 +50,7 @@ interface GetSubstituteProductRecursive {
   initialPosition: number;
   currentPosition: number | undefined;
   now: Date;
+  productsIndexed: Map<Product['id'], Product>;
 }
 
 function getSubstituteProductRecursive({
@@ -56,6 +58,7 @@ function getSubstituteProductRecursive({
   initialPosition,
   currentPosition,
   now = new Date(),
+  productsIndexed,
 }: GetSubstituteProductRecursive): string | undefined | -1 {
   // ERROR: Circular reference
   if (initialPosition === currentPosition) {
@@ -93,9 +96,7 @@ function getSubstituteProductRecursive({
     return trueOrUndefined && currentProduct.id;
   }
 
-  const replacementProduct = products.find(
-    (repl) => repl.id === currentProduct.replacementProductId
-  );
+  const replacementProduct = productsIndexed.get(currentProduct.replacementProductId);
 
   // ERROR: replacementProductId not valid
   if (!replacementProduct) {
@@ -107,6 +108,7 @@ function getSubstituteProductRecursive({
     initialPosition,
     currentPosition: products.indexOf(replacementProduct),
     now,
+    productsIndexed,
   });
 }
 
